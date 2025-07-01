@@ -2,6 +2,9 @@
   "name": "runner",
   "module": "index.ts",
   "type": "module",
+  "scripts": {
+    "start": "bun run index.ts"
+  },
   "devDependencies": {
     "@types/bun": "latest"
   },
@@ -10,6 +13,9 @@
     "db": "*"
   },
   "dependencies": {
-    "@mistralai/mistralai": "^1.7.2"
+    "@aws-sdk/client-s3": "^3.840.0",
+    "@mistralai/mistralai": "^1.7.2",
+    "@types/dockerode": "^3.3.41",
+    "dockerode": "^4.0.7"
   }
 }

@@ -1,0 +1,28 @@
+FROM manimcommunity/manim:stable
+
+USER root
+
+RUN apt-get update && apt-get install -y \
+    curl \
+    unzip \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN HOME=/root curl -fsSL https://bun.sh/install | bash
+
+ENV PATH="/root/.bun/bin:${PATH}"
+
+WORKDIR /usr/src/app
+
+COPY package.json ./
+COPY bun.lock ./
+
+RUN ~/.bun/bin/bun install
+
+COPY . .
+
+RUN ~/.bun/bin/bunx turbo build --filter=runner...
+
+RUN ~/.bun/bin/bun run generate:db
+
+# Run the application using explicit Bun path
+CMD ["~/.bun/bin/bun", "start:runner"]

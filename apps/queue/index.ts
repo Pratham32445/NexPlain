@@ -1,8 +1,8 @@
 import Redis from "ioredis";
-import { prismaClient } from "db/client"
-
+import Docker from "dockerode";
 
 const redisClient = new Redis(process.env.REDIS_URI!);
+const docker = new Docker({ socketPath: "/var/run/docker.sock" });
 
 async function init() {
     while (true) {
@@ -14,6 +14,7 @@ async function init() {
                     const parsedData = JSON.parse(data);
                     const projectId = parsedData.projectId;
                     const videoId = parsedData.videoId;
+                    startContainer(projectId, videoId);
                 } catch (parseError) {
                     console.error("Failed to parse queue data:", parseError);
                 }
@@ -22,6 +23,28 @@ async function init() {
             console.error("Redis connection error:", error);
             await new Promise(resolve => setTimeout(resolve, 5000));
         }
+    }
+}
+
+async function startContainer(videoId: string, projectId: string) {
+    try {
+        const container = await docker.createContainer({
+            Image: "runner",
+            name: `container-${projectId}-${videoId}`,
+            Tty: true,
+            Env: [
+                `PROJECT_ID=${projectId}`,
+                `VIDEO_ID=${videoId}`
+            ],
+            HostConfig: {
+                AutoRemove: false,
+                NetworkMode: "bridge"
+            }
+        })
+        await container.start();
+        console.log("started...");
+    } catch (error) {
+        console.error(error);
     }
 }
 

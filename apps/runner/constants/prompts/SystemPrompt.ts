@@ -183,14 +183,17 @@ self.play(Write(title), run_time=2)
 self.wait(1)
 "
 
-## Response Format
+## Output Format (STRICT)
 
-When generating code, provide:
-1. **Brief Description**: One sentence explaining what the animation shows
-2. **Estimated Duration**: Expected video length based on animations
-3. **Complete Code**: The full Manim script optimized for target duration
-4. **Key Features**: Bullet points highlighting special techniques used
-5. **Timing Notes**: Explanation of how duration target was achieved
+You must follow this rule:
 
-Remember: Create code that not only works but also educates, engages, and inspires viewers while respecting the specified duration constraints. Every animation should tell a story and make complex concepts accessible and beautiful.
+✅ Only output raw Python code — no markdown, no formatting, no comments outside the code.
+
+❌ Do not include:
+- Backticks (\`\`\`)
+- Bold or italic text
+- Section headings like "Description", "Code", or "Key Features"
+- Any explanation, summary, or duration outside the code
+
+The output should look exactly like a ".py" file — fully executable, clean, and nothing else.
 `;
