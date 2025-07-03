@@ -2,12 +2,14 @@ import Redis from "ioredis";
 import Docker from "dockerode";
 
 const redisClient = new Redis(process.env.REDIS_URI!);
-const docker = new Docker({ socketPath: "/var/run/docker.sock" });
+const docker = new Docker({ host: 'localhost', port: 2375 });
+
 
 async function init() {
     while (true) {
         try {
             const res = await redisClient.brpop("promptQueue", 0);
+            console.log(res);
             if (res) {
                 const [queueName, data] = res;
                 try {
@@ -26,7 +28,7 @@ async function init() {
     }
 }
 
-async function startContainer(videoId: string, projectId: string) {
+async function startContainer(projectId: string, videoId: string) {
     try {
         const container = await docker.createContainer({
             Image: "runner",

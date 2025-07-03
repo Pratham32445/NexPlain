@@ -2,27 +2,24 @@ FROM manimcommunity/manim:stable
 
 USER root
 
-RUN apt-get update && apt-get install -y \
-    curl \
-    unzip \
-    && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && \
+    apt-get install -y curl ffmpeg unzip && \
+    rm -rf /var/lib/apt/lists/* && \
+    curl -fsSL https://bun.sh/install | bash && \
+    ln -sf /root/.bun/bin/bun /usr/local/bin/bun
 
-RUN HOME=/root curl -fsSL https://bun.sh/install | bash
-
-ENV PATH="/root/.bun/bin:${PATH}"
+ENV PATH="/root/.bun/bin:$PATH"
 
 WORKDIR /usr/src/app
 
-COPY package.json ./
-COPY bun.lock ./
+COPY package.json bun.lock ./
 
-RUN ~/.bun/bin/bun install
+RUN ~/.bun/bin/bun install  
 
 COPY . .
 
-RUN ~/.bun/bin/bunx turbo build --filter=runner...
+RUN ~/.bun/bin/bun turbo build --filter=runner... \
+    && ~/.bun/bin/bun run generate:db \
+    && rm -rf node_modules/.cache /tmp/*
 
-RUN ~/.bun/bin/bun run generate:db
-
-# Run the application using explicit Bun path
-CMD ["~/.bun/bin/bun", "start:runner"]
+CMD ~/.bun/bin/bun start:runner

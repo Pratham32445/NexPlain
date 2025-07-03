@@ -1,7 +1,0 @@
-../node_modules
-../.bun
-../.turbo
-../apps
-../packages
-.git
-*.log

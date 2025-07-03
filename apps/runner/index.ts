@@ -4,10 +4,12 @@ import { systemPrompt } from "./constants/prompts/SystemPrompt";
 import fs from "fs";
 import path from "path";
 import { exec } from "child_process";
+import { uploadToS3 } from "./s3/Upload";
+
+const projectId = process.env.PROJECT_ID!;
+const videoId = process.env.VIDEO_ID!;
 
 async function init() {
-    const projectId = process.env.PROJECT_ID!;
-    const videoId = process.env.VIDEO_ID!;
     const project = await prismaClient.project.findFirst({
         where: {
             Id: projectId
@@ -16,8 +18,9 @@ async function init() {
     const code = await generateCode(project?.userPrompt!) as string;
     await createFile(code as string);
     const sceneName = code.match(/class\s+(\w+)\s*\(\s*Scene\s*\)/);
+    console.log(code,sceneName);
     if (sceneName) {
-        await GenerateVideo(sceneName[1],videoId);
+        await GenerateVideo(sceneName[1]);
     }
 }
 
@@ -48,7 +51,7 @@ async function createFile(code: string) {
     fs.writeFileSync(outputPath, code);
 }
 
-async function GenerateVideo(sceneName: string, videoId: string) {
+async function GenerateVideo(sceneName: string) {
     const filePath = path.join(process.cwd(), "main.py");
     return new Promise((resolve, reject) => {
         const cmd = `manim ${filePath} ${sceneName} -o video.mp4 -qk`;
@@ -56,6 +59,17 @@ async function GenerateVideo(sceneName: string, videoId: string) {
             if (error) {
                 return reject(error)
             }
+            const videoPath = path.join(process.cwd(), "media", "videos", "main", "2160p60", "video.mp4");
+            await prismaClient.project.update({
+                where : {
+                    Id : projectId
+                },
+                data : {
+                    userPrompt : {
+                        push : videoId
+                    }
+                }
+            })
             await prismaClient.video.update({
                 where: {
                     Id: videoId
@@ -64,6 +78,7 @@ async function GenerateVideo(sceneName: string, videoId: string) {
                     status: "GENERATED"
                 }
             })
+            await uploadToS3(videoId,videoPath);
             resolve("Done");
         })
     })
