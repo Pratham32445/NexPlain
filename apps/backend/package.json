@@ -14,6 +14,7 @@
   "dependencies": {
     "@elevenlabs/elevenlabs-js": "^2.5.0",
     "@mistralai/mistralai": "^1.7.3",
+    "client-s3": "aws-sdk/client-s3",
     "cors": "^2.8.5",
     "db": "*",
     "express": "^5.1.0"

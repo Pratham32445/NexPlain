@@ -6,10 +6,12 @@ If needed, you should chunk it up into multiple scenes, in a logical order to be
 
 ONLY Generate an array of strings, where each string is a scene transcription. START and END the array with square brackets. Each element in the array should be a string surrounded by double quotes. Do not include the programming language name or any markdown.
 
+use $ instead of , when a new element of array is added 
+
 Format example:
 
 [
-    "This is the first scene",
-    "This is the second scene",
+    "This is the first scene"$
+    "This is the second scene"$
     ...
 ]`
