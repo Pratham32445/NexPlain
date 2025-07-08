@@ -67,10 +67,10 @@ export function createProductionCut(videoId: string) {
     const output_video = path.join(final_path, `${videoId}.mp4`);
     const cmd = `ffmpeg -f concat -safe 0 -i "${fileListPath}" -c copy "${output_video}"`;
     try {
-        execSync(cmd,{stdio : "inherit"});
+        execSync(cmd, { stdio: "inherit" });
         console.log("video Generated");
     } catch (error) {
-        console.log("error Generating video",error);
+        console.log("error Generating video", error);
     } finally {
         fs.unlinkSync(fileListPath);
     }
