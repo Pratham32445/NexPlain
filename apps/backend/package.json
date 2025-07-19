@@ -16,6 +16,7 @@
     "@mistralai/mistralai": "^1.7.4",
     "cors": "^2.8.5",
     "db": "*",
-    "express": "^5.1.0"
+    "express": "^5.1.0",
+    "ws": "^8.18.3"
   }
 }

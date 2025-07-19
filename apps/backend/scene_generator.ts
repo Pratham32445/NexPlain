@@ -6,6 +6,8 @@ import { exec } from "child_process";
 import fs from "fs";
 import path from "path";
 import { storeVideoToS3 } from "./s3/storage";
+import { WebSocket } from "ws";
+import { WS_EVENTS } from "./EVENTS";
 
 export class SceneGenerator {
     private scene_transcriptions: string[] = [];
@@ -14,10 +16,12 @@ export class SceneGenerator {
     private VideoLoader = 0;
     private MAX_RETRY_ATTEMPTS = 3;
     private scene_retry_count: Map<number, number> = new Map();
+    private ws: WebSocket;
 
-    constructor(scene_transcriptions: string[], videoId: string) {
+    constructor(scene_transcriptions: string[], videoId: string, ws: WebSocket) {
         this.scene_transcriptions = scene_transcriptions;
         this.videoId = videoId;
+        this.ws = ws;
     }
 
     async render_scene(scene_id: number) {
@@ -31,7 +35,6 @@ export class SceneGenerator {
 
         exec(cmd, async (error, stdout, stderr) => {
             if (error) {
-                console.log(error);
                 const currentRetryCount = this.scene_retry_count.get(scene_id) || 0;
                 if (currentRetryCount < this.MAX_RETRY_ATTEMPTS) {
                     this.scene_retry_count.set(scene_id, currentRetryCount + 1);
@@ -108,8 +111,13 @@ export class SceneGenerator {
                 console.error(`❌ FFmpeg error: ${error.message}`);
                 return;
             }
-            console.log(`✅ Final joined video created at: ${outputPath}`);
             await storeVideoToS3(this.videoId);
+            this.ws.send(JSON.stringify({
+                type: WS_EVENTS.VIDEO_GENERATED,
+                payload: {
+                    message: "Video Successfully Generated"
+                }
+            }))
             this.VideoLoader = 0;
         });
     }
