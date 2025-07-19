@@ -3,7 +3,7 @@ import { storeVideoToS3 } from "./s3/storage";
 import { SceneGenerator } from "./scene_generator";
 import { app } from "./server";
 import { TranscriptGenerator } from "./transcript_generator";
-
+    
 app.post("/generate-video", async (req, res) => {
     const { prompt,videoId } = req.body;
     if (!prompt) {
