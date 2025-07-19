@@ -20,7 +20,7 @@ export class TranscriptGenerator {
                 const res = response.choices[0].message.content as string;
                 return res;
             } catch (error) {
-                messages.push({ "role": "user" as Role, "content": "Error: Did not follow correct format. Please create an array of strings for scenes."})
+                messages.push({ "role": "user" as Role, "content": "Error: Did not follow correct format. Please create an array of strings for scenes." })
             }
         }
     }
