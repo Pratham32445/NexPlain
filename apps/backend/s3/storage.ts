@@ -4,7 +4,7 @@ import path from "path";
 
 const client = new S3Client({
     region: "auto",
-    endpoint: "https://5ee470cf7f9f22ff352a4f05d3cfb264.r2.cloudflarestorage.com",
+    endpoint: process.env.END_POINT,
     credentials: {
         accessKeyId: process.env.ACCESS_KEY_ID!,
         secretAccessKey: process.env.SECRET_ACCESS_KEY!

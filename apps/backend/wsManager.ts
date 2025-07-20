@@ -31,16 +31,6 @@ export class WsManager {
     }
     async generate_video(message: Message) {
         const { prompt, projectId } = message.payload;
-        prismaClient.project.update({
-            data : {
-                userPrompts : {
-                    push : prompt
-                }
-            },
-            where : {
-                userId : 
-            }
-        })
         const video = await prismaClient.video.create({
             data: {
                 prompt,

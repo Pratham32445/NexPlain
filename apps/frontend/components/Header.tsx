@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import Image from "next/image";
 import { HeaderBase } from "./HeaderBase";
+import { motion } from "motion/react";
 
 export default function Header() {
 
@@ -41,12 +42,12 @@ export default function Header() {
     );
 
     return (
-        <div className="mx-4 pt-5 md:mx-0">
+        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6, duration: 0.8 }} className="mx-4 pt-5 md:mx-0">
             <HeaderBase
                 className="bg-accent border rounded-2xl max-w-3xl mx-auto  pl-4 pr-[14px]"
                 leftContent={leftContent}
                 rightContent={rightContent}
             />
-        </div>
+        </motion.div>
     );
 }
