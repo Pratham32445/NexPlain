@@ -22,6 +22,9 @@ IMPORTANT:
 - Do NOT include any language identifier (such as python) anywhere.
 - Do NOT add any explanation, comment, or extra text—just the code.
 
+IMPORTANT:
+- The Generated Video Text should not overlapp on each other 
+
 EXAMPLES:
 "Bananas are an odd fruit. They are berries, but strawberries are not. They are also a herb, not a fruit. Bananas are a great source of potassium."
 from manim import *

@@ -35,6 +35,7 @@ export class SceneGenerator {
 
         exec(cmd, async (error, stdout, stderr) => {
             if (error) {
+                console.log(error);
                 const currentRetryCount = this.scene_retry_count.get(scene_id) || 0;
                 if (currentRetryCount < this.MAX_RETRY_ATTEMPTS) {
                     this.scene_retry_count.set(scene_id, currentRetryCount + 1);

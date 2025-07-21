@@ -23,14 +23,13 @@ export class WsManager {
                 case WS_EVENTS.GENERATE_VIDEO:
                     this.generate_video(message.payload);
                     break;
-
                 default:
                     break;
             }
         }
     }
-    async generate_video(message: Message) {
-        const { prompt, projectId } = message.payload;
+    async generate_video(payload : any) {
+        const { prompt, projectId } = payload;
         const video = await prismaClient.video.create({
             data: {
                 prompt,
@@ -49,7 +48,7 @@ export class WsManager {
     sendMessage(type: string, payload: any) {
         this.ws.send(JSON.stringify({
             type,
-            payload
+              payload
         }))
     }
 }
