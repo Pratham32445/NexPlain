@@ -19,6 +19,7 @@ export class WsManager {
     init() {
         this.ws.onmessage = (event) => {
             const message: Message = JSON.parse(event.data.toString());
+            console.log(message);
             switch (message.type) {
                 case WS_EVENTS.GENERATE_VIDEO:
                     this.generate_video(message.payload);
@@ -28,27 +29,32 @@ export class WsManager {
             }
         }
     }
-    async generate_video(payload : any) {
-        const { prompt, projectId } = payload;
-        const video = await prismaClient.video.create({
-            data: {
-                prompt,
-                projectId
-            }
-        })
-        const transcript = new TranscriptGenerator();
-        this.sendMessage(WS_EVENTS.USER_NOTIFICATION, { message: "Transcriptions Generated" });
-        const transcriptions = await transcript.generate_transcript(prompt);
-        if (!transcriptions) return;
-        const parsed_transcription = parsedTranscription(transcriptions);
-        const scene_generator = new SceneGenerator(parsed_transcription, video.Id, this.ws);
-        this.sendMessage(WS_EVENTS.USER_NOTIFICATION, { message: "Scenes Generated" });
-        scene_generator.generate_all_scenes();
+    async generate_video(payload: any) {
+        try {
+            const { prompt, projectId } = payload;
+            const video = await prismaClient.video.create({
+                data: {
+                    prompt,
+                    projectId
+                }
+            })
+            const transcript = new TranscriptGenerator();
+            this.sendMessage(WS_EVENTS.USER_NOTIFICATION, { message: "Transcriptions Generated" });
+            const transcriptions = await transcript.generate_transcript(prompt);
+            if (!transcriptions) return;
+            const parsed_transcription = parsedTranscription(transcriptions);
+            const scene_generator = new SceneGenerator(parsed_transcription, video.Id, this.ws);
+            this.sendMessage(WS_EVENTS.USER_NOTIFICATION, { message: "Scenes Generated" });
+            scene_generator.generate_all_scenes();
+        } catch (error) {
+            console.log(error); 
+            // this.sendMessage();
+        }
     }
     sendMessage(type: string, payload: any) {
         this.ws.send(JSON.stringify({
             type,
-              payload
+            payload
         }))
     }
 }

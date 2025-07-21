@@ -1,7 +1,7 @@
 import type { Role } from "@mistralai/mistralai/models/components";
 import { SYSTEM_SCENE_PROMPT } from "./constants/system_prompts/scene_prompt";
 import { client } from "./LLM/client";
-import { getFileContent, removeDir, removePartialFiles, StoreScene } from "./fs/fs";
+import { clearParitalFiles, clipUnCompletedVideos, getFileContent, removeDir, removePartialFiles, StoreScene } from "./fs/fs";
 import { exec } from "child_process";
 import fs from "fs";
 import path from "path";
@@ -14,7 +14,7 @@ export class SceneGenerator {
     private videoId: string;
     private MAX_TRANSCRIPTION = 5;
     private VideoLoader = 0;
-    private MAX_RETRY_ATTEMPTS = 3;
+    private MAX_RETRY_ATTEMPTS = 1;
     private scene_retry_count: Map<number, number> = new Map();
     private ws: WebSocket;
 
@@ -46,6 +46,7 @@ export class SceneGenerator {
                     }, "error");
                 } else {
                     this.VideoLoader += 20;
+                    clipUnCompletedVideos(scene_id, this.videoId);
                     this.checkForCompletion();
                 }
                 return;
@@ -92,7 +93,7 @@ export class SceneGenerator {
         })
     }
 
-    async createProuctionVideo() {
+    async createProductionVideo() {
         const videoListPath = path.join("/generated", this.videoId, "videos.txt");
 
         const videoPaths = this.scene_transcriptions.map((_, idx) => {
@@ -122,10 +123,10 @@ export class SceneGenerator {
             this.VideoLoader = 0;
         });
     }
-    checkForCompletion() {
+    async checkForCompletion() {
         if (this.VideoLoader >= 100) {
             console.log("creating production video");
-            this.createProuctionVideo();
+            await this.createProductionVideo();
         }
     }
-}
+}       

@@ -2,6 +2,9 @@
   "name": "orchestrator",
   "module": "index.ts",
   "type": "module",
+  "scripts": {
+    "start" : "bun run index.ts"
+  },
   "devDependencies": {
     "@types/bun": "latest"
   },
@@ -9,6 +12,9 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "@types/dockerode": "^3.3.42",
+    "cors": "^2.8.5",
+    "dockerode": "^4.0.7",
     "express": "^5.1.0"
   }
 }

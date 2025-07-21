@@ -14,7 +14,6 @@ const client = new S3Client({
 export async function storeVideoToS3(videoId: string) {
     const videoPath = path.join("/generated", videoId, "final_output.mp4");
 
-    // Check if file exists and has non-zero size
     if (!fs.existsSync(videoPath)) {
         console.error("❌ Video file not found:", videoPath);
         return;
@@ -29,8 +28,8 @@ export async function storeVideoToS3(videoId: string) {
     const fileStream = fs.createReadStream(videoPath);
 
     const cmd = new PutObjectCommand({
-        Bucket: "prompt2video",       // Replace with your R2 bucket name
-        Key: "final_output.mp4",      // Destination key inside R2
+        Bucket: "prompt2video",       
+        Key: videoId,     
         Body: fileStream,
         ContentType: "video/mp4",
     });

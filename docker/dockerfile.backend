@@ -1,6 +1,4 @@
-# Stage 1: Get Bun and build your app
-FROM oven/bun:alpine AS bun-stage
-
+FROM oven/bun:1-debian AS bun-stage
 WORKDIR /app
 
 COPY package.json package.json
@@ -15,18 +13,39 @@ RUN bun install
 COPY apps/backend/ apps/backend/
 COPY packages/db/ packages/db/
 
+WORKDIR /app/packages/db
+RUN bun run prisma generate
+
+ENV MISTRAL_API_KEY = 2mDYIh1Xbg6Yf9rl0l67u9rbZwqEUC3t
+ENV ACCESS_KEY_ID = 76fa203a5dd20c22864a7962730c3249
+ENV SECRET_ACCESS_KEY = 33c65f6b693012b23ef23786e895e33e8f3bbfbce10d356564ff2aa9a50befc3
+ENV END_POINT=https://5ee470cf7f9f22ff352a4f05d3cfb264.r2.cloudflarestorage.com
+
 WORKDIR /app/apps/backend
 
-# Stage 2: Final image with both Manim and Bun
 FROM manimcommunity/manim:latest
+
+USER root
+
+RUN apt-get update && apt-get install -y \
+    ffmpeg \
+    curl \
+    unzip \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN ffmpeg -version
+
+RUN python -c "import manim; print(f'Manim version: {manim.__version__}')"
+
+ENV MPLBACKEND=Agg
+ENV MANIM_DISABLE_CACHING=True
 
 WORKDIR /app
 
-# Copy Bun binary from the bun-stage
-COPY --from=bun-stage /usr/local/bin/bun /usr/local/bin/bun
+COPY --from=bun-stage --chmod=755 /usr/local/bin/bun /usr/local/bin/bun
 
-# Copy the built application and node_modules from bun-stage
 COPY --from=bun-stage /app .
 
-# Now you have both manim and bun available
+WORKDIR /app/apps/backend
+
 CMD ["bun", "run", "start"]
