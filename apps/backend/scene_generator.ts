@@ -8,6 +8,7 @@ import path from "path";
 import { storeVideoToS3 } from "./s3/storage";
 import { WebSocket } from "ws";
 import { WS_EVENTS } from "./EVENTS";
+import { code_validation } from "./constants/system_prompts/code_validation";
 
 export class SceneGenerator {
     private scene_transcriptions: string[] = [];
@@ -77,9 +78,12 @@ export class SceneGenerator {
                     model: "mistral-medium-2505"
                 })
                 const output = res.choices[0].message.content as string;
-                messages.push({ role: "system", content: output });
-
-                StoreScene(this.videoId, Idx, output);
+                let parsedCode = await this.validateCode(output) as string;
+                parsedCode = parsedCode.replace(/```python\s*\n?/g, "");
+                parsedCode = parsedCode.replace(/```\s*$/g, "");
+                parsedCode = parsedCode.trim();
+                messages.push({ role: "system", content: parsedCode });
+                StoreScene(this.videoId, Idx, parsedCode);
                 this.render_scene(Idx);
                 return;
             } catch (error) {
@@ -128,5 +132,23 @@ export class SceneGenerator {
             console.log("creating production video");
             await this.createProductionVideo();
         }
+    }
+    async validateCode(code: string) {
+        const messages = [
+            { "role": "system" as Role, "content": code_validation },
+            { "role": "user" as Role, "content": code }
+        ]
+        const res = await client.chat.complete({
+            messages: messages,
+            model: "mistral-medium-2505"
+        })
+        const content = res.choices[0].message.content as string;
+        const correctedCode = this.extractCorrectedCode(content);
+        return correctedCode || code;
+    }
+    private extractCorrectedCode(response: string): string | null {
+        const regex = /\*\*CORRECTED CODE:\*\*\s*```(?:python)?([\s\S]*?)```/;
+        const match = response.match(regex);
+        return match ? match[1].trim() : null;
     }
 }       

@@ -3,7 +3,7 @@ import Docker from "dockerode";
 import cors from "cors";
 
 const app = express();
-const docker = new Docker({
+const docker = new Docker({ 
     host: 'localhost',
     port: 2375
 });
@@ -27,12 +27,9 @@ app.post("/get-container-url", async (req, res) => {
             },
             HostConfig: {
                 PortBindings: {
-                    "3001/tcp": [{}],
-                },
-                Binds: [
-                    "/generated:/generated"
-                ]
-            },
+                    "3001/tcp": [{hostPort : ""}]
+                }
+            }
         });
         await container.start();
         const info = await container.inspect();

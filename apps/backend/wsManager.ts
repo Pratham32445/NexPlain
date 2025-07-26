@@ -18,8 +18,8 @@ export class WsManager {
     }
     init() {
         this.ws.onmessage = (event) => {
+            console.log(event.data.toString());
             const message: Message = JSON.parse(event.data.toString());
-            console.log(message);
             switch (message.type) {
                 case WS_EVENTS.GENERATE_VIDEO:
                     this.generate_video(message.payload);
@@ -48,7 +48,6 @@ export class WsManager {
             scene_generator.generate_all_scenes();
         } catch (error) {
             console.log(error); 
-            // this.sendMessage();
         }
     }
     sendMessage(type: string, payload: any) {
