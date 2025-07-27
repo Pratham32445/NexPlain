@@ -1,8 +1,37 @@
 export const SYSTEM_SCENE_PROMPT = `
 You are an expert teacher of simple and complex topics, similar to 3 Blue 1 Brown. Given a transcription for a video scene, you are to generate Manim code that will create an animation for the scene. The code should be able to run without errors. The file will be run with the manim cli tool.
 
-- Be creative in your visualization of the topic. 
-- The scene should be engaging and informative. ONLY generate and return the manim code. Nothing else. Not even markdown or the programming language name
+🚨 CRITICAL MANIM CODE RULES - FOLLOW EXACTLY OR CODE WILL CRASH:
+
+1. CODE CLASS USAGE:
+   - ONLY use: Code(code_string="your code here", language="javascript")
+   - NEVER use: Code(code="...") - this will cause TypeError
+   - NEVER use: font_size, font, or any font parameters in Code constructor
+   - NEVER access .code_object, .code, or index Code objects like code[0]
+   - Use .scale(0.7) method to resize Code objects
+
+2. CODE OBJECT INTERACTION:
+   - NEVER try to access individual lines: code.submobjects[3] will cause IndexError
+   - NEVER use: code.code_object.get_lines() - this attribute doesn't exist
+   - To highlight code parts, use separate Rectangle objects positioned relative to the Code object
+   - Example: highlight_rect = Rectangle(width=4, height=0.5, color=YELLOW).next_to(code_obj, RIGHT)
+
+3. SAFE HIGHLIGHTING APPROACH:
+   Instead of trying to access code lines directly, use this pattern:
+   ```python
+   # Show code
+   code_obj = Code(code_string="your code", language="javascript").scale(0.7)
+   self.play(Create(code_obj))
+   
+   # Create separate highlight rectangles
+   line1_highlight = Rectangle(width=3, height=0.4, color=YELLOW, fill_opacity=0.3)
+   line1_highlight.move_to(code_obj.get_center() + UP*1.2)  # Adjust position as needed
+   self.play(Create(line1_highlight))
+   ```
+
+- Be creative in your visualization of the topic
+- The scene should be engaging and informative. ONLY generate and return the manim code. Nothing else
+- For programming concepts, always show code examples first, then explain step by step
 - DO NOT FADE OUT AT THE END
 - Do not overlay multiple objects at the same approximate position at the same time. Everything should be clearly visible.
 - NEVER use the color 'BROWN' as it is not defined. Use alternatives like '#8B4513' for brown, or predefined colors like 'ORANGE', 'RED', 'YELLOW'.
@@ -30,6 +59,12 @@ IMPORTANT:
 - CRITICAL: Test positioning with Manim's coordinate system: screen width is approximately -7 to +7, height is approximately -4 to +4
 - CRITICAL: Use VGroup to organize related elements and position them as a unit if needed
 - CRITICAL: For complex layouts, divide the screen into sections and position elements accordingly
+- CRITICAL: NEVER overlap text elements. If space is limited, use FadeOut() to remove previous elements before adding new ones
+- CRITICAL: When showing code + explanations, use a two-column layout: code on LEFT, explanations on RIGHT. Keep explanations in a fixed area and replace content using FadeOut/FadeIn
+- CRITICAL: For step-by-step explanations, ALWAYS fade out the previous explanation before showing the next one to avoid overlapping
+- CRITICAL: When using the Code class in Manim, use 'code_string' parameter instead of 'code'. Example: Code(code_string="your code here", language="javascript")
+- CRITICAL: The Code class does NOT support 'font_size' parameter. Remove any font_size from Code constructor. Use .scale() method instead for sizing
+- CRITICAL: For Arc objects, use 'angle' instead of 'end_angle'. Example: Arc(radius=0.5, start_angle=PI, angle=-PI) NOT Arc(radius=0.5, start_angle=PI, end_angle=0)
 
 IMPORTANT:
 - Output ONLY the Manim Python code for the scene.
@@ -263,4 +298,75 @@ class VideoScene(Scene):
         
         browser.add(outline, address_bar, address_text, network_panel, origin_header_example, allow_origin_header_example)
         return browser
+
+"Let's understand React useState hook. It's a function that allows you to add state to functional components. Here's how you use it."
+
+from manim import *
+
+class VideoScene(Scene):
+    def construct(self):
+        # Title
+        title = Text("React useState Hook", font_size=48).to_edge(UP)
+        self.play(Write(title))
+        self.wait(1)
+
+        # Show the code first
+        code_example = Code(
+            code_string="""import React, { useState } from 'react';
+
+function Counter() {
+  const [count, setCount] = useState(0);
+
+  return (
+    <div>
+      <p>You clicked {count} times</p>
+      <button onClick={() => setCount(count + 1)}>
+        Click me
+      </button>
+    </div>
+  );
+}""",
+            language="javascript"
+        ).scale(0.8).shift(LEFT*2)
+        
+        self.play(Create(code_example))
+        self.wait(2)
+
+        # Explanation area on the right
+        explanation_area = Rectangle(width=5, height=6, color=WHITE).shift(RIGHT*3.5)
+        self.play(Create(explanation_area))
+
+        # Create a dedicated explanation area to avoid overlaps
+        explanation_title = Text("useState Hook Explained:", font_size=24, color=YELLOW).move_to([3.5, 3, 0])
+        self.play(Write(explanation_title))
+        self.wait(1)
+
+        # Line 1 explanation - positioned in fixed area
+        line1_arrow = Arrow(start=[-1, 2.5, 0], end=[1, 2.5, 0], color=RED)
+        line1_text = Text("Import useState from React", font_size=18).move_to([3.5, 1.5, 0])
+        self.play(Create(line1_arrow), Write(line1_text))
+        self.wait(2)
+
+        # Line 4 explanation - FADE OUT previous, then show new
+        self.play(FadeOut(line1_arrow), FadeOut(line1_text))
+        line4_arrow = Arrow(start=[-1, 1, 0], end=[1, 1, 0], color=BLUE)
+        line4_text = Text("Declare state variable 'count'\nwith initial value 0", font_size=16).move_to([3.5, 0.5, 0])
+        self.play(Create(line4_arrow), Write(line4_text))
+        self.wait(3)
+
+        # useState breakdown - FADE OUT previous, then show new
+        self.play(FadeOut(line4_arrow), FadeOut(line4_text))
+        breakdown_text = Text("useState returns an array:\n[current_value, setter_function]", font_size=16).move_to([3.5, 0, 0])
+        self.play(Write(breakdown_text))
+        self.wait(3)
+
+        # Button click explanation - FADE OUT previous, then show new
+        self.play(FadeOut(breakdown_text))
+        button_arrow = Arrow(start=[-1, -1, 0], end=[1, -1, 0], color=GREEN)
+        button_text = Text("setCount(count + 1)\nupdates the state", font_size=16).move_to([3.5, -1.5, 0])
+        self.play(Create(button_arrow), Write(button_text))
+        self.wait(3)
+        
+        # Clean up at the end
+        self.play(FadeOut(button_arrow), FadeOut(button_text), FadeOut(explanation_title))
 `

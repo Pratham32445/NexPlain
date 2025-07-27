@@ -1,7 +1,7 @@
 import type { Role } from "@mistralai/mistralai/models/components";
 import { SYSTEM_SCENE_PROMPT } from "./constants/system_prompts/scene_prompt";
 import { client } from "./LLM/client";
-import { clearParitalFiles, clipUnCompletedVideos, getFileContent, removeDir, removePartialFiles, StoreScene } from "./fs/fs";
+import { clipUnCompletedVideos, getFileContent, removeDir, removePartialFiles, StoreScene } from "./fs/fs";
 import { exec } from "child_process";
 import fs from "fs";
 import path from "path";
@@ -78,9 +78,11 @@ export class SceneGenerator {
                     model: "mistral-medium-2505"
                 })
                 const output = res.choices[0].message.content as string;
-                let parsedCode = await this.validateCode(output) as string;
+                let parsedCode = output;                
                 parsedCode = parsedCode.replace(/```python\s*\n?/g, "");
                 parsedCode = parsedCode.replace(/```\s*$/g, "");
+                parsedCode = parsedCode.replace(/^\s*STEP \d+.*$/gm, '');                 
+                parsedCode = this.fixManimCode(parsedCode);
                 parsedCode = parsedCode.trim();
                 messages.push({ role: "system", content: parsedCode });
                 StoreScene(this.videoId, Idx, parsedCode);
@@ -147,8 +149,53 @@ export class SceneGenerator {
         return correctedCode || code;
     }
     private extractCorrectedCode(response: string): string | null {
-        const regex = /\*\*CORRECTED CODE:\*\*\s*```(?:python)?([\s\S]*?)```/;
-        const match = response.match(regex);
-        return match ? match[1].trim() : null;
+        // Try multiple patterns to extract corrected code
+        const patterns = [
+            /\*\*CORRECTED CODE:\*\*\s*```(?:python)?([\s\S]*?)```/,
+            /CORRECTED CODE:\s*```(?:python)?([\s\S]*?)```/,
+            /```python([\s\S]*?)```/,
+            /```([\s\S]*?)```/
+        ];
+        
+        for (const regex of patterns) {
+            const match = response.match(regex);
+            if (match && match[1]) {
+                let code = match[1].trim();
+                // Remove any validation artifacts
+                code = code.replace(/\*\*.*?\*\*/g, ''); // Remove **SECTION:** headers
+                code = code.replace(/^\s*```.*$/gm, ''); // Remove any remaining code block markers
+                code = code.replace(/^\s*STEP \d+.*$/gm, ''); // Remove STEP headers
+                code = code.replace(/^\s*Status:.*$/gm, ''); // Remove Status lines
+                code = code.replace(/^\s*\[Command.*$/gm, ''); // Remove command lines
+                return code.trim();
+            }
+        }
+        return null;
+    }
+
+    private fixManimCode(code: string): string {
+        // Fix common Manim errors
+        
+        // Fix 1: Code class parameter issues
+        code = code.replace(/Code\(code=/g, 'Code(code_string=');
+        code = code.replace(/Code\(\s*code=/g, 'Code(code_string=');
+        
+        // Fix 2: Remove unsupported font parameters from Code constructor  
+        code = code.replace(/,\s*font_size=[0-9]+/g, '');
+        code = code.replace(/,\s*font="[^"]*"/g, '');
+        code = code.replace(/,\s*font='[^']*'/g, '');
+        
+        // Fix 3: Remove problematic code object access patterns
+        code = code.replace(/\.submobjects\[\d+\]/g, '.get_center()');
+        
+        // Fix 4: Remove .code_object access
+        code = code.replace(/\.code_object\.get_lines\(\)/g, '');
+        code = code.replace(/\.code_object/g, '');
+        
+        // Fix 5: Replace problematic highlighting attempts
+        code = code.replace(/SurroundingRectangle\(\s*[^,]*\.submobjects\[[^\]]*\]/g, 
+                           'Rectangle(width=3, height=0.4, color=YELLOW, fill_opacity=0.3)');
+        
+        return code;
     }
 }       

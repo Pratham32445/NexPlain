@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: docker/dockerfile.backend
+    ports:
+      - "3000:3001"
+    environment:
+      - MISTRAL_API_KEY=${MISTRAL_API_KEY}
+      - ACCESS_KEY_ID=${ACCESS_KEY_ID}
+      - SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY}
+      - END_POINT=${END_POINT}
+      - NODE_ENV=production
+    volumes:
+      - generated_videos:/generated
+      - ./apps/backend/fix_manim_files.py:/fix_manim_files.py:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+volumes:
+  generated_videos:
+    driver: local

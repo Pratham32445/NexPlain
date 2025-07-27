@@ -99,7 +99,12 @@ Based on common Manim errors, pay special attention to:
 - **BROWN color usage**: Replace any usage of 'BROWN' with alternatives like '#8B4513', 'ORANGE', 'RED', or 'YELLOW'
 - **Undefined attributes**: MathTex objects don't have .label attributes - use proper object references
 - **Table constructor parameter mismatches**
-- **Code object initialization issues**  
+- **Code object initialization issues**: CRITICAL - The Code class constructor uses 'code_string' parameter, NOT 'code'. This is a common error that causes TypeError: Code.__init__() got an unexpected keyword argument 'code'. ALWAYS replace:
+  - Code(code="...") → Code(code_string="...")
+  - Any usage of .code attribute on Code objects will also fail with AttributeError
+  - Code objects do NOT support indexing like code[0] or code[4][12:25] - replace with relative positioning using rectangles
+- **Code class unsupported parameters**: The Code class does NOT support 'font_size' or 'font' parameters. Remove them and use .scale() method for sizing instead
+- **Arc object parameter issues**: Use 'angle' instead of 'end_angle' for Arc objects. Change Arc(end_angle=...) to Arc(angle=...)
 - **Missing or incorrect imports**
 - **Object reference errors**: Check that objects exist before accessing their properties
 - **Animation parameter problems**
