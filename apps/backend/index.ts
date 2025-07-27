@@ -1,6 +1,6 @@
 import { WebSocketServer,WebSocket } from "ws";
 import { WsManager } from "./wsManager";
-import { app, startHttpServer } from "./server";
+import { startHttpServer } from "./server";
 
 const wss = new WebSocketServer({ port: 3001 });
 startHttpServer();

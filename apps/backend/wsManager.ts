@@ -44,7 +44,7 @@ export class WsManager {
             const transcriptions = await transcript.generate_transcript(prompt);
             if (!transcriptions) return;
             const parsed_transcription = parsedTranscription(transcriptions);
-            generateVoiceOver(parsed_transcription);
+            console.log(parsed_transcription);
             const scene_generator = new SceneGenerator(parsed_transcription, video.Id, this.ws);
             this.sendMessage(WS_EVENTS.USER_NOTIFICATION, { message: "Scenes Generated" });
             scene_generator.generate_all_scenes();
