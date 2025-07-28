@@ -59,6 +59,7 @@ export const SYSTEM_SCENE_PROMPT = `You are an expert teacher of simple and comp
 - NEVER use the color 'BROWN' as it is not defined. Use alternatives like '#8B4513' for brown, or predefined colors like 'ORANGE', 'RED', 'YELLOW'.
 - NEVER use SVGMobject or reference any .svg files as they don't exist. Create simple shapes using Rectangle, Circle, Polygon instead.
 - NEVER use undefined colors. Stick to predefined Manim colors: RED, BLUE, GREEN, YELLOW, ORANGE, PURPLE, PINK, WHITE, BLACK, GRAY, or use hex colors like '#8B4513'.
+- NEVER use 'Diamond' shape as it doesn't exist in Manim. Use 'Polygon' to create diamond shapes with four vertices: Polygon([0, 1, 0], [1, 0, 0], [0, -1, 0], [-1, 0, 0]) for diamond shapes.
 - All elements should be inside the bounds of the video
 - Make sure that all the functions you use exist and are imported
 - Do NOT assume objects have attributes they don't have (e.g., MathTex objects don't have .label attributes, VGroup objects don't have .get_tex_string() method)

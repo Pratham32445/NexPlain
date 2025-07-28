@@ -78,10 +78,10 @@ export class SceneGenerator {
                     model: "mistral-medium-2505"
                 })
                 const output = res.choices[0].message.content as string;
-                let parsedCode = output;                
+                let parsedCode = output;
                 parsedCode = parsedCode.replace(/```python\s*\n?/g, "");
                 parsedCode = parsedCode.replace(/```\s*$/g, "");
-                parsedCode = parsedCode.replace(/^\s*STEP \d+.*$/gm, '');                 
+                parsedCode = parsedCode.replace(/^\s*STEP \d+.*$/gm, '');
                 parsedCode = this.fixManimCode(parsedCode);
                 parsedCode = parsedCode.trim();
                 messages.push({ role: "system", content: parsedCode });
@@ -156,7 +156,7 @@ export class SceneGenerator {
             /```python([\s\S]*?)```/,
             /```([\s\S]*?)```/
         ];
-        
+
         for (const regex of patterns) {
             const match = response.match(regex);
             if (match && match[1]) {
@@ -175,52 +175,73 @@ export class SceneGenerator {
 
     private fixManimCode(code: string): string {
         // Fix common Manim errors
-        
+
         // Fix 1: Code class parameter issues
         code = code.replace(/Code\(code=/g, 'Code(code_string=');
         code = code.replace(/Code\(\s*code=/g, 'Code(code_string=');
-        
+
         // Fix 2: Remove unsupported font parameters from Code constructor  
         code = code.replace(/,\s*font_size=[0-9]+/g, '');
         code = code.replace(/,\s*font="[^"]*"/g, '');
         code = code.replace(/,\s*font='[^']*'/g, '');
-        
+
         // Fix 3: Remove problematic code object access patterns
         code = code.replace(/\.submobjects\[\d+\]/g, '.get_center()');
-        
+
         // Fix 4: Remove .code_object access
         code = code.replace(/\.code_object\.get_lines\(\)/g, '');
         code = code.replace(/\.code_object/g, '');
-        
+
         // Fix 5: Replace problematic highlighting attempts
-        code = code.replace(/SurroundingRectangle\(\s*[^,]*\.submobjects\[[^\]]*\]/g, 
-                           'Rectangle(width=3, height=0.4, color=YELLOW, fill_opacity=0.3)');
-        
+        code = code.replace(/SurroundingRectangle\(\s*[^,]*\.submobjects\[[^\]]*\]/g,
+            'Rectangle(width=3, height=0.4, color=YELLOW, fill_opacity=0.3)');
+
         // Fix 6: Fix VGroup circular reference issues
         // Replace patterns like .next_to(topics[0], DOWN) inside VGroup construction
         code = code.replace(/\.next_to\(\w+\[\d+\],\s*\w+(?:,\s*buff=[0-9.]+)?\)/g, '');
-        
+
         // Fix 7: Remove any remaining circular references in VGroup
         const vgroupPattern = /VGroup\([^)]*\w+\[\d+\][^)]*\)/g;
         if (vgroupPattern.test(code)) {
             // If we find VGroup with array indexing, comment out the problematic line
             code = code.replace(/^(\s*)(.*\w+\[\d+\].*)$/gm, '$1# $2  # Fixed: Circular reference removed');
         }
-        
+
         // Fix 8: Replace undefined BROWN color with valid alternative
         code = code.replace(/color=BROWN/g, 'color="#8B4513"');
         code = code.replace(/color=BROWN,/g, 'color="#8B4513",');
-        
+
         // Fix 9: Replace SVG file references with basic shapes
         // Replace SVGMobject references with basic geometric shapes
         code = code.replace(/SVGMobject\(["']timer\.svg["']\)/g, 'Circle(radius=0.5, color=BLUE)');
         code = code.replace(/SVGMobject\(["'][^"']*\.svg["']\)/g, 'Rectangle(width=1, height=1, color=GRAY)');
-        
-        // Fix 10: Ensure proper imports are included
+
+        // Fix 10: Replace Diamond shapes with equivalent Polygons
+        // Diamond is not a built-in Manim shape, so we need to create it using Polygon
+        code = code.replace(/Diamond\(([^)]+)\)/g, (match, params) => {
+            // Extract width, height and other parameters
+            const widthMatch = params.match(/width=([0-9.]+)/);
+            const heightMatch = params.match(/height=([0-9.]+)/);
+            const colorMatch = params.match(/color=([A-Z_]+|"[^"]*"|'[^']*')/);
+            const fillOpacityMatch = params.match(/fill_opacity=([0-9.]+)/);
+            
+            const width = widthMatch ? parseFloat(widthMatch[1]) : 2;
+            const height = heightMatch ? parseFloat(heightMatch[1]) : 2;
+            const color = colorMatch ? colorMatch[1] : 'WHITE';
+            const fillOpacity = fillOpacityMatch ? fillOpacityMatch[1] : '0.2';
+            
+            // Create a diamond using Polygon with diamond-shaped vertices
+            const halfWidth = width / 2;
+            const halfHeight = height / 2;
+            
+            return `Polygon([0, ${halfHeight}, 0], [${halfWidth}, 0, 0], [0, -${halfHeight}, 0], [-${halfWidth}, 0, 0], color=${color}, fill_opacity=${fillOpacity})`;
+        });
+
+        // Fix 11: Ensure proper imports are included
         if (!code.includes('from manim import *')) {
             code = 'from manim import *\n\n' + code;
         }
-        
+
         return code;
     }
 }       
