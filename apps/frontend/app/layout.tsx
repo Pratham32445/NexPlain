@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import {
+  ClerkProvider
+} from '@clerk/nextjs'
 import { ThemeProvider } from "@/components/theme-provider"
+import { defaultFont } from "@/lib/font-config";
 import "./globals.css";
-
-const inter = Inter({ subsets: ["latin"] });
+import Provider from "@/Provider";
 
 
 export const metadata: Metadata = {
@@ -17,18 +19,21 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${inter.className} antialiased`}
-      >
-        <ThemeProvider 
-          attribute="class"
-          defaultTheme="dark"
-          enableSystem
-          disableTransitionOnChange>
-          {children}
-        </ThemeProvider>
-      </body>
-    </html>
+    <ClerkProvider>
+      <Provider>
+        <html lang="en" suppressHydrationWarning>
+          <body
+            className={`${defaultFont.className} font-sans antialiased`}
+          >
+            <ThemeProvider
+              attribute="class"
+              forcedTheme="dark"
+            >
+              {children}
+            </ThemeProvider>
+          </body>
+        </html>
+      </Provider>
+    </ClerkProvider>
   );
 }

@@ -9,12 +9,24 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Your existing models
+model User {
+  id         String    @id @default(uuid())
+  clerk_id   String    @unique
+  email      String
+  first_name String?
+  last_name  String?
+  image_url  String?
+  project    Project[]
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+}
+
 model Project {
-  Id          String   @id @default(uuid())
+  id          String   @id @default(uuid())
   title       String?
   desc        String?
   userId      String
+  user        User     @relation(fields: [userId], references: [id])
   userPrompts String[]
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
@@ -22,104 +34,17 @@ model Project {
 }
 
 model Video {
-  Id         String      @id @default(uuid())
+  id         String      @id @default(uuid())
   title      String?
   prompt     String
   duration   Int?
   status     VideoStatus @default(PENDING)
   projectId  String
   created_at DateTime    @default(now())
-  project    Project     @relation(fields: [projectId], references: [Id])
+  project    Project     @relation(fields: [projectId], references: [id])
 }
 
 enum VideoStatus {
   PENDING
   GENERATED
-}
-
-// Better Auth required models
-model user {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String    @unique
-  emailVerified Boolean   @default(false)
-  image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  
-  // Better Auth relations
-  accounts      account[]
-  sessions      session[]
-  twoFactor     twoFactor?
-  passkeys      passkey[]
-}
-
-model account {
-  id                String  @id @default(cuid())
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String?
-  access_token      String?
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String?
-  session_state     String?
-  
-  user user @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([provider, providerAccountId])
-}
-
-model session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-  ipAddress    String?
-  userAgent    String?
-  
-  user user @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model verification {
-  id        String   @id @default(cuid())
-  identifier String
-  value     String
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([identifier, value])
-  @@map("verifications")
-}
-
-// Optional: For two-factor authentication
-model twoFactor {
-  id        String   @id @default(cuid())
-  secret    String
-  backupCodes String[]
-  userId    String   @unique
-  
-  user user @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-// Optional: For passkeys/WebAuthn
-model passkey {
-  id           String @id @default(cuid())
-  name         String?
-  publicKey    String
-  userId       String
-  webauthnUserId String
-  counter      Int
-  deviceType   String
-  backedUp     Boolean
-  transports   String?
-  createdAt    DateTime @default(now())
-  
-  user user @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, webauthnUserId])
 }
