@@ -1,10 +1,9 @@
 import type { WebSocket } from "ws";
-import { WS_EVENTS } from "./EVENTS";
+import { WS_EVENTS } from "comman/ws_event";
 import prismaClient from "db/client";
 import { TranscriptGenerator } from "./transcript_generator";
 import { parsedTranscription } from "./lib/ParseTranscription";
 import { SceneGenerator } from "./scene_generator";
-import { generateVoiceOver } from "./tts";
 
 interface Message {
     type: string,
@@ -13,8 +12,12 @@ interface Message {
 
 export class WsManager {
     ws: WebSocket;
+    transcript: any;
+    scene_generator: any;
     constructor(ws: WebSocket) {
         this.ws = ws;
+        this.transcript = new TranscriptGenerator();
+        this.scene_generator = new SceneGenerator(ws);
         this.init();
     }
     init() {
@@ -32,6 +35,15 @@ export class WsManager {
     }
     async generate_video(payload: any) {
         try {
+            if (this.scene_generator.checkforProcess()) {
+                this.ws.send(JSON.stringify({
+                    type: WS_EVENTS["VIDEO_IN_PROCESS"],
+                    payload: {
+                        loading : true,
+                        count : this.scene_generator.loadingCount()
+                    }
+                }))
+            }
             const { prompt, projectId } = payload;
             const video = await prismaClient.video.create({
                 data: {
@@ -39,17 +51,14 @@ export class WsManager {
                     projectId
                 }
             })
-            const transcript = new TranscriptGenerator();
             this.sendMessage(WS_EVENTS.USER_NOTIFICATION, { message: "Transcriptions Generated" });
-            const transcriptions = await transcript.generate_transcript(prompt);
+            const transcriptions = await this.transcript.generate_transcript(prompt);
             if (!transcriptions) return;
             const parsed_transcription = parsedTranscription(transcriptions);
-            console.log(parsed_transcription);
-            const scene_generator = new SceneGenerator(parsed_transcription, video.Id, this.ws);
             this.sendMessage(WS_EVENTS.USER_NOTIFICATION, { message: "Scenes Generated" });
-            scene_generator.generate_all_scenes();
+            this.scene_generator.generate_all_scenes(parsed_transcription, video.id);
         } catch (error) {
-            console.log(error); 
+            console.log(error);
         }
     }
     sendMessage(type: string, payload: any) {

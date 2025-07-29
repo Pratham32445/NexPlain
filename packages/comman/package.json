@@ -1,0 +1,14 @@
+{
+  "name": "comman",
+  "module": "index.ts",
+  "type": "module",
+  "exports" : {
+    "./ws_event" : "./src/ws_events.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
